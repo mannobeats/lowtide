@@ -9,7 +9,7 @@ let package = Package(
     platforms: [.macOS(.v15)],
     dependencies: [
         // Parakeet on the Neural Engine (Core ML).
-        .package(url: "https://github.com/FluidInference/FluidAudio", exact: "0.17.5"),
+        .package(url: "https://github.com/FluidInference/FluidAudio", exact: "0.18.3"),
         // Qwen3-ASR on the GPU (MLX).
         .package(url: "https://github.com/Blaizzy/mlx-audio-swift", revision: "8d86630ade569728aaea3dc1a29fc44e2efa719b"),
         // The MLX releases mlx-audio-swift is tested with; newer ones make
