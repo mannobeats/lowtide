@@ -105,7 +105,7 @@ root-owned leftovers without asking for your password each time.
 
 ## Build from source
 
-You need macOS 26 and Xcode 26 or later. There's no Xcode project: the app is a Swift package
+You need Xcode 27.2 or later (the app itself runs on macOS 26 and later). There's no Xcode project: the app is a Swift package
 built by small scripts.
 
 ```sh

@@ -14,7 +14,7 @@ reading first saves a round of review.
 
 ## Setting up
 
-You need macOS 26 and Xcode 26 or later.
+You need Xcode 27.2 or later. The app itself runs on macOS 26 and later.
 
 ```sh
 scripts/build.sh --open   # build into /Applications/Lowtide.app and open it

@@ -17,8 +17,11 @@ permissions:
 jobs:
   analyze:
     name: Analyze (${{ matrix.language }})
-    runs-on: ${{ matrix.language == 'swift' && 'macos-26' || 'ubuntu-latest' }}
+    runs-on: ${{ matrix.language == 'swift' && 'xcode-27' || 'ubuntu-latest' }}
     timeout-minutes: 60
+    env:
+      # Lowtide needs the macOS 27 SDK: Xcode 27.2, beside the image's default.
+      DEVELOPER_DIR: /Applications/Xcode_27.2.app/Contents/Developer
     permissions:
       security-events: write
       contents: read

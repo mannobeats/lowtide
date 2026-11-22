@@ -1,5 +1,5 @@
 # Builds Lowtide and runs its tests on every push to main and every pull
-# request, on GitHub's free macOS runners (free for public repositories).
+# request, on GitHub's macOS runners with Xcode 27 (free for public repositories).
 name: CI
 
 on:
@@ -18,9 +18,11 @@ concurrency:
 jobs:
   build-and-test:
     name: Build and test
-    runs-on: macos-26
+    runs-on: xcode-27
     timeout-minutes: 45
     env:
+      # Lowtide needs the macOS 27 SDK: Xcode 27.2, beside the image's default.
+      DEVELOPER_DIR: /Applications/Xcode_27.2.app/Contents/Developer
       LOWTIDE_SCRATCH: ${{ github.workspace }}/.build/app
       LOWTIDE_TEST_SCRATCH: ${{ github.workspace }}/.build/test
     steps:

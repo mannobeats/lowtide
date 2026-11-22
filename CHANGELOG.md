@@ -6,6 +6,8 @@ taken from its section here.
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-22
+
 ### Added
 
 - Lowtide updates itself: a daily check of its GitHub releases (Settings › General › Updates,
@@ -13,8 +15,7 @@ taken from its section here.
   notarized.
 - Menu bar manager on macOS 27: an always-hidden section, and Lowtide's bar of hidden icons
   under «, with a choice between it and macOS's own «.
-- Open-source project files: GPL-3.0 license, contributing guide, code of conduct, security
-  policy, CI, CodeQL, Dependabot and a release workflow.
+- Lowtide is open source under the GPL-3.0, built and released in the open.
 
 ### Fixed
 
