@@ -6,6 +6,13 @@ taken from its section here.
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-11-22
+
+### Fixed
+
+- Installing an update quits and reopens Lowtide by itself, instead of waiting until you quit
+  it.
+
 ## [1.1.0] - 2026-11-22
 
 ### Added

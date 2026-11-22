@@ -123,7 +123,11 @@ final class Updater {
         process.executableURL = URL(fileURLWithPath: "/bin/sh")
         process.arguments = ["-c", script, app.path]
         try? process.run()
-        NSApp.terminate(nil)
+        // From the run loop, not from this task: AppKit waits for the quit's
+        // answer in a nested event loop, which can't run anything else queued
+        // on the main queue while this job holds it, so the answer never came
+        // and the app hung instead of quitting.
+        NSApp.perform(#selector(NSApplication.terminate(_:)), with: nil, afterDelay: 0)
     }
 }
 
