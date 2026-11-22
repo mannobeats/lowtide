@@ -37,6 +37,11 @@ jobs:
           languages: ${{ matrix.language }}
           build-mode: ${{ matrix.language == 'swift' && 'manual' || 'none' }}
 
+      # CodeQL's tracer runs the package manifest as an Intel binary.
+      - name: Rosetta
+        if: matrix.language == 'swift'
+        run: softwareupdate --install-rosetta --agree-to-license
+
       - name: Build
         if: matrix.language == 'swift'
         run: xcrun swift build --scratch-path .build/codeql
