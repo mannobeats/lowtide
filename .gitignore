@@ -1,0 +1,19 @@
+.build/
+.swiftpm/
+*.xcodeproj
+xcuserdata/
+DerivedData/
+.DS_Store
+/Helpers/Voice/.build/
+/dist/
+/tmp/
+*.xcuserstate
+
+# Signing material never belongs in the repository (docs/RELEASING.md).
+*.p12
+*.p8
+*.cer
+*.mobileprovision
+*.provisionprofile
+.env
+.env.*

@@ -1,0 +1,23 @@
+# Weekly pull requests for newer GitHub Actions and Swift packages.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
+
+  - package-ecosystem: swift
+    directory: /
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: swift
+    directory: /Helpers/Voice
+    schedule:
+      interval: monthly
+    # mlx-swift is pinned to the release mlx-audio-swift is tested with.
+    ignore:
+      - dependency-name: "*mlx*"

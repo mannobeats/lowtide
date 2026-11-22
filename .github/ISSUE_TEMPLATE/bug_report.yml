@@ -1,0 +1,54 @@
+name: Bug report
+description: Something in Lowtide doesn't work as it should.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Please don't include passwords, keys, host names or other private
+        details; Privacy Mode (⇧⌘P) hides names and paths in screenshots.
+        Security problems go to [private reporting](https://github.com/mannobeats/lowtide/security/advisories/new), not here.
+  - type: input
+    id: version
+    attributes:
+      label: Lowtide version
+      description: Lowtide › About Lowtide
+      placeholder: "1.2.0"
+    validations:
+      required: true
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version
+      description:  › About This Mac
+      placeholder: "macOS 27.2"
+    validations:
+      required: true
+  - type: input
+    id: where
+    attributes:
+      label: Where
+      description: The space and page, e.g. "Extensions › Menu bar manager"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: What you did
+      description: Steps that show the problem.
+      placeholder: |
+        1. …
+        2. …
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected, and what happened
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Screenshots or logs
+      description: Logs from Console.app, filtered to "lowtide", help with crashes and hangs.

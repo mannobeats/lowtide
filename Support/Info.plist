@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleIdentifier</key><string>dev.lowtide.app</string>
+  <key>CFBundleName</key><string>Lowtide</string>
+  <!-- Lowtide's own updates: the latest GitHub release (SelfUpdate). -->
+  <key>LowtideUpdateFeed</key><string>https://api.github.com/repos/mannobeats/lowtide/releases/latest</string>
+  <key>CFBundleDisplayName</key><string>Lowtide</string>
+  <key>CFBundleExecutable</key><string>Lowtide</string>
+  <key>CFBundlePackageType</key><string>APPL</string>
+  <key>CFBundleShortVersionString</key><string>1.0.0</string>
+  <key>CFBundleVersion</key><string>1</string>
+  <key>CFBundleIconFile</key><string>AppIcon</string>
+  <key>CFBundleIconName</key><string>AppIcon</string>
+  <key>LSMinimumSystemVersion</key><string>26.0</string>
+  <key>LSApplicationCategoryType</key><string>public.app-category.utilities</string>
+  <key>NSPrincipalClass</key><string>NSApplication</string>
+  <key>NSHighResolutionCapable</key><true/>
+  <key>NSSupportsAutomaticTermination</key><false/>
+  <key>CFBundleURLTypes</key>
+  <array>
+    <dict>
+      <key>CFBundleURLName</key><string>dev.lowtide.app</string>
+      <key>CFBundleURLSchemes</key><array><string>lowtide</string></array>
+    </dict>
+  </array>
+  <key>NSMicrophoneUsageDescription</key>
+  <string>Lowtide listens only while you hold the dictation shortcut, and turns what you say into text on this Mac.</string>
+  <key>NSAppleEventsUsageDescription</key>
+  <string>Lowtide asks Finder and System Events to do what you choose: empty the Trash, eject disks, switch dark mode and manage login items.</string>
+</dict>
+</plist>

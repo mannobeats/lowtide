@@ -1,0 +1,28 @@
+# Changelog
+
+Notable changes for each release. The format follows [Keep a Changelog](https://keepachangelog.com),
+and versions follow [Semantic Versioning](https://semver.org). A release's notes on GitHub are
+taken from its section here.
+
+## [Unreleased]
+
+### Added
+
+- Lowtide updates itself: a daily check of its GitHub releases (Settings › General › Updates,
+  or Lowtide › Check for Updates…), installed only when signed by the same developer and
+  notarized.
+- Menu bar manager on macOS 27: an always-hidden section, and Lowtide's bar of hidden icons
+  under «, with a choice between it and macOS's own «.
+- Open-source project files: GPL-3.0 license, contributing guide, code of conduct, security
+  policy, CI, CodeQL, Dependabot and a release workflow.
+
+### Fixed
+
+- Menu bar manager on macOS 27: hidden apps' names no longer stay stuck on screen after an
+  icon moves, « sits beside the shown icons instead of across an empty gap, and the divider
+  settles at once instead of in many steps.
+- Menu bar widgets: the colour presets stay within the page at any window width.
+
+## [1.0.0] - 2026-11-18
+
+The first version of Lowtide, before the project was published.

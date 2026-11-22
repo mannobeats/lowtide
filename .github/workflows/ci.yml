@@ -1,0 +1,65 @@
+# Builds Lowtide and runs its tests on every push to main and every pull
+# request, on GitHub's free macOS runners (free for public repositories).
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: Build and test
+    runs-on: macos-26
+    timeout-minutes: 45
+    env:
+      LOWTIDE_SCRATCH: ${{ github.workspace }}/.build/app
+      LOWTIDE_TEST_SCRATCH: ${{ github.workspace }}/.build/test
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Toolchain
+        run: |
+          xcodebuild -version
+          xcrun swift --version
+
+      - name: Cache SwiftPM builds
+        uses: actions/cache@v4
+        with:
+          path: .build
+          key: spm-${{ runner.os }}-${{ hashFiles('Package.resolved', 'Package.swift') }}
+          restore-keys: spm-${{ runner.os }}-
+
+      - name: Build
+        run: zsh scripts/check.sh 200
+
+      - name: Test
+        run: TAIL=200 zsh scripts/test.sh
+
+      - name: Privileged helper
+        run: LOWTIDE_HELPERS="$RUNNER_TEMP/helpers" zsh scripts/build-privileged.sh
+
+      - name: App bundle (unsigned, release)
+        run: |
+          LOWTIDE_APP="$RUNNER_TEMP/Lowtide.app" LOWTIDE_SIGN=- zsh scripts/build.sh --release
+          plutil -lint "$RUNNER_TEMP/Lowtide.app/Contents/Info.plist"
+          codesign --verify --deep "$RUNNER_TEMP/Lowtide.app"
+
+  workflows:
+    name: Lint workflows
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - name: actionlint
+        run: |
+          bash <(curl -fsSL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+          ./actionlint -color
