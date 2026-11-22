@@ -1,5 +1,9 @@
-# GitHub's code scanning for Swift and the workflows themselves: weekly, on
-# pull requests to main, and on demand. Free for public repositories.
+# GitHub's code scanning for the workflows: weekly, on pull requests to main,
+# and on demand. Free for public repositories.
+#
+# Swift isn't scanned yet: CodeQL's Swift tracer is an Intel binary that
+# needs Rosetta, which GitHub's macOS 27 image doesn't allow, and Lowtide
+# needs the macOS 27 SDK. Add `swift` back once CodeQL runs natively there.
 name: CodeQL
 
 on:
@@ -16,36 +20,20 @@ permissions:
 
 jobs:
   analyze:
-    name: Analyze (${{ matrix.language }})
-    runs-on: ${{ matrix.language == 'swift' && 'xcode-27' || 'ubuntu-latest' }}
-    timeout-minutes: 60
-    env:
-      # Lowtide needs the macOS 27 SDK: Xcode 27.2, beside the image's default.
-      DEVELOPER_DIR: /Applications/Xcode_27.2.app/Contents/Developer
+    name: Analyze (actions)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       security-events: write
       contents: read
-    strategy:
-      fail-fast: false
-      matrix:
-        language: [swift, actions]
     steps:
       - uses: actions/checkout@v5
 
       - uses: github/codeql-action/init@v3
         with:
-          languages: ${{ matrix.language }}
-          build-mode: ${{ matrix.language == 'swift' && 'manual' || 'none' }}
-
-      # CodeQL's tracer runs the package manifest as an Intel binary.
-      - name: Rosetta
-        if: matrix.language == 'swift'
-        run: softwareupdate --install-rosetta --agree-to-license
-
-      - name: Build
-        if: matrix.language == 'swift'
-        run: xcrun swift build --scratch-path .build/codeql
+          languages: actions
+          build-mode: none
 
       - uses: github/codeql-action/analyze@v3
         with:
-          category: /language:${{ matrix.language }}
+          category: /language:actions
