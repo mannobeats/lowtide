@@ -9,7 +9,10 @@ set -euo pipefail
 ROOT=${0:A:h:h}
 SCRATCH=${LOWTIDE_VOICE_SCRATCH:-$HOME/Library/Developer/Lowtide/voice-build}
 OUT=$HOME/Library/Developer/Lowtide/helpers
-BUNDLES=(mlx-swift_Cmlx.bundle swift-transformers_Hub.bundle FluidAudio_FluidAudio.bundle)
+# Resource bundles the helper loads at run time. These two are always built;
+# others come and go with package versions (FluidAudio 0.18 dropped its own),
+# so whatever the build makes is copied and nothing else.
+REQUIRED=(mlx-swift_Cmlx.bundle swift-transformers_Hub.bundle)
 
 # macOS remounts the Metal toolchain under a new random name now and then and
 # the build plan keeps the old path: every shader then fails to compile. The
@@ -26,8 +29,14 @@ fi
 
 mkdir -p $OUT
 cp $PRODUCTS/lowtide-voice $OUT/lowtide-voice
-for name in $BUNDLES; do
+for name in $REQUIRED; do
   [[ -d $PRODUCTS/$name ]] || { echo "missing $name"; exit 1; }
+done
+BUNDLES=(${PRODUCTS}/*.bundle(N:t))
+for old in $OUT/*.bundle(N:t); do
+  (( ${BUNDLES[(Ie)$old]} )) || rm -rf $OUT/$old
+done
+for name in $BUNDLES; do
   rsync -a --delete $PRODUCTS/$name/ $OUT/$name/
 done
 # Signed here: in Contents/Helpers they count as nested code, and the app's
