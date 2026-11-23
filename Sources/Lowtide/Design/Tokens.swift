@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Type scale for SF (macOS sizes, not web sizes). Body is 13.
 enum TextSize: CGFloat {
-    case xxs = 11, xs = 12, sm = 13, md = 14, base = 15, lg = 17, xl = 22, xxl = 28, display = 36
+    case xxs = 11, xs = 12, sm = 13, md = 14, base = 15, lg = 17, xl = 22, xxl = 26, display = 36
 }
 
 extension Font {

@@ -6,6 +6,16 @@ taken from its section here.
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-11-23
+
+### Changed
+
+- Calmer, more refined type: text on dark themes is a soft white like macOS's own instead of a
+  near-pure white that read as bold, buttons use regular weight, the hint under each setting is
+  11 pt, and page titles are 26 pt.
+- Dictation's Parakeet models run on FluidAudio 0.18.3. The first load after updating takes a
+  little longer while macOS prepares the model once.
+
 ## [1.1.1] - 2026-11-22
 
 ### Fixed

@@ -81,7 +81,7 @@ struct PrefsRow<Control: View>: View {
         VStack(alignment: .leading, spacing: 2) {
             Text(label).font(.ui(.sm)).foregroundStyle(palette.ink.color)
             if let hint {
-                Text(hint).font(.ui(.xs)).foregroundStyle(palette.ink3.color).fixedSize(horizontal: false, vertical: true)
+                Text(hint).font(.ui(.xxs)).foregroundStyle(palette.ink3.color).fixedSize(horizontal: false, vertical: true)
             }
         }
     }

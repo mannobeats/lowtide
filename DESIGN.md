@@ -76,8 +76,13 @@ plus Graphite, Arctic, Amber, Crimson, Phosphor and imported theme files (the fo
 ## Type (SF, macOS sizes)
 
 11 counts/kbd · 12 meta/labels · 13 body · 14 command bar rows · 15 row titles · 17 sheet/pane titles · 22 page titles ·
-28 a hero's sentence · 36 big hero numbers. SF Mono only for code, paths, hosts, versions, numbers in
+26 a hero's sentence · 36 big hero numbers. SF Mono only for code, paths, hosts, versions, numbers in
 columns. Figures that line up: `.monospacedDigit()`.
+
+Calm, not loud: on dark themes the main text is about 91% light (macOS's own #E4E5E5), never pure
+white, which glows and reads as bold on a dark ground; secondary text a step below. Buttons and
+links are regular weight, a selected segment medium; semibold only for headings and titles. A
+setting's hint is 11 pt under its 13 pt label.
 
 ## The command bar
 
