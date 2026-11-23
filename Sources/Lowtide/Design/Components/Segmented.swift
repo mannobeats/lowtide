@@ -30,7 +30,7 @@ struct Segmented<Value: Hashable>: View {
                                 .foregroundStyle((on ? palette.ink2 : palette.ink3).color)
                         }
                     }
-                    .font(.ui(.xs, on ? .semibold : .regular))
+                    .font(.ui(.xs, on ? .medium : .regular))
                     .foregroundStyle((on ? palette.ink : palette.ink3).color)
                     .padding(.horizontal, 10)
                     .frame(height: 22)

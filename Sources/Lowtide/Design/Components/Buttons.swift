@@ -26,7 +26,7 @@ private struct LowtideButtonBody: View {
 
         var body: some View {
             configuration.label
-                .font(.ui(size == .small ? .xs : .sm, kind == .quiet ? .regular : .medium))
+                .font(.ui(size == .small ? .xs : .sm))
                 .lineLimit(1)
                 .labelStyle(TightLabelStyle())
                 .foregroundStyle(foreground)
