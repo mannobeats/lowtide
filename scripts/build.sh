@@ -47,7 +47,7 @@ rsync -a --delete --exclude AppIcon.icns --exclude Assets.car Resources/ "$APP/C
 # Helpers built by their own scripts (dictation, privileged helper).
 if [[ $VOICE == 1 ]]; then zsh scripts/build-voice.sh; fi
 HELPERS=$HOME/Library/Developer/Lowtide/helpers
-if [[ -d $HELPERS ]]; then rsync -a $HELPERS/ "$APP/Contents/Helpers/"; fi
+if [[ -d $HELPERS ]]; then rsync -a --delete $HELPERS/ "$APP/Contents/Helpers/"; fi
 if [[ -d Support/LaunchDaemons ]]; then mkdir -p "$APP/Contents/Library/LaunchDaemons"; cp Support/LaunchDaemons/*.plist "$APP/Contents/Library/LaunchDaemons/"; fi
 
 # Release builds ship without debug symbols (the binary drops by half).
