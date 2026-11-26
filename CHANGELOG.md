@@ -6,6 +6,8 @@ taken from its section here.
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-11-26
+
 ### Added
 
 - Dictation's shortcut takes any key: the one above Tab, letters, digits, punctuation, and the
