@@ -7,9 +7,6 @@ public struct VoiceStatus: Equatable, Sendable, Encodable {
     public var running = false
     /// The shortcut's event tap is on (needs Accessibility); nil until it says.
     public var shortcutAccess: Bool?
-    /// The app holding Secure Event Input, which hides every key press from
-    /// the shortcut until it lets go.
-    public var blockedBy: String?
     /// Apple's on-device model can polish text.
     public var polishAvailable = false
     /// System Settings › Keyboard › "Press 🌐 key to": 0 is Do Nothing, nil
@@ -55,8 +52,6 @@ public struct VoiceStatus: Equatable, Sendable, Encodable {
             shortcutAccess = shortcut
             if let polish { polishAvailable = polish }
             if let fn { fnUsage = fn }
-        case .blocked(let by):
-            blockedBy = by
         default:
             break
         }
@@ -66,13 +61,12 @@ public struct VoiceStatus: Equatable, Sendable, Encodable {
     /// The helper ended: nothing it said about the moment still holds.
     public mutating func stopped() {
         running = false
-        blockedBy = nil
         phase = .idle
         download = nil
     }
 
     private enum CodingKeys: String, CodingKey {
-        case available, running, shortcutAccess, blockedBy, polishAvailable, fnUsage, phase, message
+        case available, running, shortcutAccess, polishAvailable, fnUsage, phase, message
         case modelID = "model", modelState, modelMessage, download
     }
 
@@ -83,7 +77,6 @@ public struct VoiceStatus: Equatable, Sendable, Encodable {
         try c.encode(available, forKey: .available)
         try c.encode(running, forKey: .running)
         try c.encode(shortcutAccess, forKey: .shortcutAccess)
-        try c.encode(blockedBy, forKey: .blockedBy)
         try c.encode(polishAvailable, forKey: .polishAvailable)
         try c.encode(fnUsage, forKey: .fnUsage)
         try c.encode(phase.rawValue, forKey: .phase)

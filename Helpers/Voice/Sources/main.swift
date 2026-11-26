@@ -40,7 +40,6 @@
 //        {"type":"access","shortcut":bool,"polish":bool,"fnUsage":n|null}
 //            shortcut: a valid, enabled event tap. fnUsage: macOS's Globe
 //            key setting (0 is Do Nothing).
-//        {"type":"blocked","by":"…"}             the app holding Secure Input
 //
 // Diagnostics (never what was said) go to ~/Library/Logs/Lowtide/voice.ndjson.
 //

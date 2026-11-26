@@ -107,10 +107,6 @@ final class Session {
     /// Jobs up to this id were cancelled with Esc.
     private var cancelledThrough = 0
 
-    /// Who holds Secure Event Input, as last told to the app.
-    private var blocker: String?
-    private var blockerTimer: Timer?
-
     private var engine: Engine?
     private var engineID: ModelID?
     private var loading: Task<Void, Never>?
@@ -160,11 +156,13 @@ final class Session {
             download?.task.cancel()
         case "record-shortcut":
             Hotkey.shared.start()
+            SecureChord.shared.listening = true
             Hotkey.shared.record { shortcut in
                 Output.send(["type": "shortcut", "shortcut": shortcut.json, "label": shortcut.label])
             }
         case "stop-recording-shortcut":
             Hotkey.shared.stopRecording()
+            SecureChord.shared.listening = false
         case "devices":
             let fallback = Devices.defaultUID()
             Output.send([
@@ -215,27 +213,12 @@ final class Session {
             Hotkey.shared.shortcut = next.shortcut
         }
         Hotkey.shared.start()
-        watchSecureInput()
+        SecureChord.shared.start()
         if next.sounds { Chime.prepare() }
         if next.model != engineID || (engine == nil && loading == nil) {
             prepare()
         }
         sendAccess()
-    }
-
-    /// Tells the app when Secure Event Input starts or stops hiding the
-    /// shortcut, once a second: the key press itself never reaches us then.
-    private func watchSecureInput() {
-        guard blockerTimer == nil else { return }
-        blockerTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
-            MainActor.assumeIsolated {
-                guard let self else { return }
-                let holder = SecureInput.holder()
-                guard holder != self.blocker else { return }
-                self.blocker = holder
-                Output.send(["type": "blocked", "by": holder ?? ""])
-            }
-        }
     }
 
     // MARK: Model

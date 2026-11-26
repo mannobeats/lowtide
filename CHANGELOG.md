@@ -6,6 +6,19 @@ taken from its section here.
 
 ## [Unreleased]
 
+### Added
+
+- Dictation's shortcut takes any key: the one above Tab, letters, digits, punctuation, and the
+  arrows, with or without ⌘, ⌥ or ⌃. The row keeps a one-line note when a key gives up the
+  character it types, and shows "Saved" once it's recorded.
+
+### Fixed
+
+- Dictation keeps working while another app holds Secure Input, as a focused password field
+  does. macOS hides key presses from the shortcut's event tap then; the shortcut is now taken
+  as a Carbon hotkey for as long as that lasts, so dictation still starts anywhere. The warning
+  that used to say an app was blocking the shortcut is gone, since nothing is blocked.
+
 ## [1.2.0] - 2026-11-23
 
 ### Changed

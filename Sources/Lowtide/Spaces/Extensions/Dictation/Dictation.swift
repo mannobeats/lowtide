@@ -40,6 +40,9 @@ final class Dictation {
     private(set) var devices: [VoiceDevice] = []
     private(set) var installed: Set<String> = []
     private(set) var recordingShortcut = false
+    /// A just-recorded shortcut shows "Saved" for a moment, then settles.
+    private(set) var shortcutSaved = false
+    @ObservationIgnored private var savedTask: Task<Void, Never>?
     @ObservationIgnored private var escMonitor: Any?
     /// The latest dictation, kept or not, for Paste and Copy last dictation.
     private(set) var last: String?
@@ -209,6 +212,7 @@ final class Dictation {
             recordShortcut(false)
             prefs.shortcut = shortcut
             prefs.shortcutLabel = label
+            flashSaved()
         case .devices(let list):
             devices = list
         default:
@@ -292,6 +296,10 @@ final class Dictation {
 
     func recordShortcut(_ on: Bool) {
         recordingShortcut = on
+        if on {
+            savedTask?.cancel()
+            shortcutSaved = false
+        }
         escMonitor.map(NSEvent.removeMonitor)
         escMonitor = nil
         do { try send(VoiceLine.command(on ? "record-shortcut" : "stop-recording-shortcut")) } catch {
@@ -305,6 +313,17 @@ final class Dictation {
             guard event.keyCode == 53 else { return event }
             MainActor.assumeIsolated { Dictation.shared.recordShortcut(false) }
             return nil
+        }
+    }
+
+    /// "Saved" beside the new shortcut for a moment, then back to nothing.
+    private func flashSaved() {
+        savedTask?.cancel()
+        shortcutSaved = true
+        savedTask = Task {
+            try? await Task.sleep(for: .seconds(1))
+            guard !Task.isCancelled else { return }
+            shortcutSaved = false
         }
     }
 

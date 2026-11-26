@@ -48,6 +48,25 @@ struct Shortcut: Equatable {
 
     /// Modifiers ignoring side, for key and mouse shortcuts.
     var generic: Set<String> { Set(modifiers.map(Keys.base)) }
+
+    /// Carbon can hold this while Secure Input hides the event tap: a
+    /// keyboard key and no fn (Carbon can't hold it). A mouse button or a
+    /// modifier alone has no chord to register. A bare key is taken too:
+    /// the tap already swallows it, so grabbing it changes nothing.
+    var secureChord: Bool {
+        guard let key, button == nil, (0...127).contains(key) else { return false }
+        return !generic.contains("fn")
+    }
+
+    /// The Carbon modifier bits for this shortcut.
+    var carbonModifiers: UInt32 {
+        var out: UInt32 = 0
+        if generic.contains("command") { out |= UInt32(cmdKey) }
+        if generic.contains("option") { out |= UInt32(optionKey) }
+        if generic.contains("control") { out |= UInt32(controlKey) }
+        if generic.contains("shift") { out |= UInt32(shiftKey) }
+        return out
+    }
 }
 
 enum Keys {
@@ -88,12 +107,10 @@ enum Keys {
     /// Down, Forward Delete, Help and the F-keys): fn on them proves nothing.
     static let implicitFn: Set<Int> = functionKeys.union([123, 124, 125, 126, 115, 119, 116, 121, 117, 114])
 
-    /// A key with ⌘, ⌥, ⌃ or a real fn held, or a function key alone.
-    static func canBeShortcut(key: Int, held: Set<String>) -> Bool {
-        if functionKeys.contains(key) { return true }
-        var real = held.intersection(["command", "option", "control", "fn"])
-        if implicitFn.contains(key) { real.remove("fn") }
-        return !real.isEmpty
+    /// What is really held: the fn macOS adds to arrows and the like by
+    /// itself isn't a modifier the shortcut asked for.
+    static func realModifiers(key: Int, held: Set<String>) -> Set<String> {
+        implicitFn.contains(key) ? held.subtracting(["fn"]) : held
     }
 
     /// Side-agnostic modifiers of a key event.
@@ -279,6 +296,106 @@ enum Clock {
     }
 }
 
+/// While another app holds Secure Event Input (a focused password field, or a
+/// browser that never let go), macOS stops handing key presses to event taps;
+/// modifier changes still arrive. Carbon hotkeys are matched before that
+/// filter, so while Secure Input is on the shortcut is registered with Carbon
+/// and its press and release go where the tap would have sent them (Hex's
+/// `suppression/secure_input.rs`, MIT). Only then: a Carbon hotkey takes its
+/// key ahead of the tap, so otherwise the tap keeps its own rules.
+@MainActor
+final class SecureChord {
+    static let shared = SecureChord()
+
+    private var ref: EventHotKeyRef?
+    private var registered: Shortcut?
+    private var held = false
+    private var installed = false
+
+    /// Set while recording a shortcut: the keys belong to the recorder, so
+    /// no hotkey is registered over them.
+    var listening = false
+
+    /// On the main thread, once.
+    func start() {
+        guard !installed else { return }
+        installed = true
+        var spec = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
+        InstallEventHandler(GetApplicationEventTarget(), { _, event, _ -> OSStatus in
+            var id = EventHotKeyID()
+            let status = GetEventParameter(event, EventParamName(kEventParamDirectObject),
+                                           EventParamType(typeEventHotKeyID), nil,
+                                           MemoryLayout<EventHotKeyID>.size, nil, &id)
+            guard status == noErr, id.signature == OSType(0x5445_5945) else { return OSStatus(eventNotHandledErr) }
+            MainActor.assumeIsolated { SecureChord.shared.pressed() }
+            return noErr
+        }, 1, &spec, nil, nil)
+        var released = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyReleased))
+        InstallEventHandler(GetApplicationEventTarget(), { _, event, _ -> OSStatus in
+            var id = EventHotKeyID()
+            let status = GetEventParameter(event, EventParamName(kEventParamDirectObject),
+                                           EventParamType(typeEventHotKeyID), nil,
+                                           MemoryLayout<EventHotKeyID>.size, nil, &id)
+            guard status == noErr, id.signature == OSType(0x5445_5945) else { return OSStatus(eventNotHandledErr) }
+            MainActor.assumeIsolated { SecureChord.shared.released() }
+            return noErr
+        }, 1, &released, nil, nil)
+        poll()
+        Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { _ in
+            MainActor.assumeIsolated { SecureChord.shared.poll() }
+        }
+    }
+
+    /// Registers (or drops) the hotkey as Secure Input comes and goes, the
+    /// shortcut changes, or a recorder takes the keys.
+    func poll() {
+        let secure = IsSecureEventInputEnabled()
+        let shortcut = Hotkey.shared.shortcut
+        let wanted = secure && !listening && shortcut.secureChord ? shortcut : nil
+        guard wanted != registered else { return }
+        unregister()
+        guard let wanted else { return }
+        var newRef: EventHotKeyRef?
+        let status = RegisterEventHotKey(
+            UInt32(wanted.key ?? 0), wanted.carbonModifiers,
+            EventHotKeyID(signature: OSType(0x5445_5945), id: 1),
+            GetApplicationEventTarget(), 0, &newRef)
+        guard status == noErr, let newRef else {
+            Log.event("secure", ["action": "refused", "shortcut": wanted.label, "status": Int(status)])
+            return
+        }
+        ref = newRef
+        registered = wanted
+        Log.event("secure", ["action": "registered", "shortcut": wanted.label])
+    }
+
+    private func unregister() {
+        if let ref { UnregisterEventHotKey(ref) }
+        if let registered { Log.event("secure", ["action": "dropped", "shortcut": registered.label]) }
+        ref = nil
+        registered = nil
+        // A hold that was going when it let go ends now, as Hex does.
+        if held {
+            held = false
+            Hotkey.shared.deliver(.release, at: Clock.now())
+        }
+    }
+
+    fileprivate func pressed() {
+        guard !held else { return }
+        held = true
+        Log.event("secure", ["action": "press"])
+        Hotkey.shared.deliver(.press, at: Clock.now())
+    }
+
+    fileprivate func released() {
+        guard held else { return }
+        held = false
+        Log.event("secure", ["action": "release"])
+        Hotkey.shared.deliver(.release, at: Clock.now())
+    }
+}
+
 /// Events the shortcut produces.
 enum HotkeyEvent {
     case press
@@ -347,6 +464,12 @@ final class Hotkey: @unchecked Sendable {
     var capturingEscape: Bool {
         get { locked { escapeValue } }
         set { locked { escapeValue = newValue } }
+    }
+
+    /// A key press that came through the Carbon fallback, since the tap
+    /// can't see one while Secure Input is on: taken as the tap would.
+    func deliver(_ event: HotkeyEvent, at: UInt64) {
+        emit(event, at)
     }
 
     /// A valid, enabled tap.
@@ -568,7 +691,7 @@ final class Hotkey: @unchecked Sendable {
             if shortcut.modifiersOnly {
                 return (false, type == .keyDown && active ? .interrupted : nil, nil)
             }
-            guard key == shortcut.key, Keys.held(event.flags) == shortcut.generic else {
+            guard key == shortcut.key, Keys.realModifiers(key: key, held: Keys.held(event.flags)) == shortcut.generic else {
                 // The shortcut's key let go after its modifiers.
                 if type == .keyUp && key == shortcut.key && active {
                     active = false
@@ -620,11 +743,11 @@ final class Hotkey: @unchecked Sendable {
             }
         case .keyDown:
             let key = Int(event.getIntegerValueField(.keyboardEventKeycode))
-            let held = Keys.held(event.flags)
-            // Esc, or a key that types or moves (a letter, Space, an arrow),
-            // isn't a shortcut: it would then fire in every app. It passes
-            // through instead, so Esc reaches Lowtide and cancels.
-            guard Keys.canBeShortcut(key: key, held: held) else { return (false, nil, nil) }
+            // Esc cancels (it passes through to Lowtide); every other key can
+            // be a shortcut, bare ones included. The page warns when a bare
+            // key gives up the character it types.
+            guard key != kVK_Escape else { return (false, nil, nil) }
+            let held = Keys.realModifiers(key: key, held: Keys.held(event.flags))
             done = Shortcut(key: key, button: nil, modifiers: held)
         case .otherMouseDown:
             let button = Int(event.getIntegerValueField(.mouseEventButtonNumber))
