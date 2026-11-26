@@ -31,8 +31,7 @@ import Testing
             == .access(shortcut: true, polish: false, fnUsage: .some(nil)))
         #expect(HelperMessage.parse(#"{"type":"access","shortcut":false,"polish":true,"fnUsage":0}"#)
             == .access(shortcut: false, polish: true, fnUsage: .some(0)))
-        #expect(HelperMessage.parse(#"{"type":"blocked","by":""}"#) == .blocked(by: nil))
-        #expect(HelperMessage.parse(#"{"type":"blocked","by":"1Password"}"#) == .blocked(by: "1Password"))
+        #expect(HelperMessage.parse(#"{"type":"blocked","by":"1Password"}"#) == nil, "a retired message reads as unknown")
         #expect(HelperMessage.parse(#"{"type":"shortcut","shortcut":{"modifiers":["control","option"],"key":49},"label":"⌃⌥ Space"}"#)
             == .shortcut(VoiceShortcut(key: 49, modifiers: ["control", "option"]), label: "⌃⌥ Space"))
         #expect(HelperMessage.parse(#"{"type":"devices","devices":[{"uid":"BuiltInMicrophoneDevice","name":"MacBook Pro Microphone","isDefault":true}]}"#)
@@ -77,6 +76,22 @@ import Testing
         #expect(prefs.shortcut == .rightOption && prefs.history && prefs.excluded.count == 5)
         let round = try JSONDecoder().decode(VoicePrefs.self, from: JSONEncoder().encode(prefs))
         #expect(round == prefs)
+    }
+
+    @Test func notesOnlyKeysThatType() {
+        // The key above Tab, as it was saved before the recorder took it.
+        #expect(VoiceShortcut(key: 50, modifiers: []).note(label: "`") == "` no longer types")
+        #expect(VoiceShortcut(key: 50, modifiers: ["control"]).note(label: "⌃`") == nil)
+        #expect(VoiceShortcut(key: 49, modifiers: []).note(label: "Space") != nil)
+        // ⇧ and fn still type, so they note; ⌘, ⌥ and ⌃ don't.
+        #expect(VoiceShortcut(key: 0, modifiers: ["shift"]).note(label: "⇧A") != nil)
+        #expect(VoiceShortcut(key: 0, modifiers: ["fn"]).note(label: "fn A") != nil)
+        #expect(VoiceShortcut(key: 0, modifiers: ["command"]).note(label: "⌘A") == nil)
+        // A key that only moves gives nothing up.
+        #expect(VoiceShortcut(key: 122, modifiers: []).note(label: "F1") == nil)
+        #expect(VoiceShortcut(key: 123, modifiers: []).note(label: "←") == nil)
+        #expect(VoiceShortcut(button: 3, modifiers: []).note(label: "Mouse 4") == nil)
+        #expect(VoiceShortcut.rightOption.note(label: "Right ⌥") == nil)
     }
 
     @Test func everyModelHasAUniqueID() {

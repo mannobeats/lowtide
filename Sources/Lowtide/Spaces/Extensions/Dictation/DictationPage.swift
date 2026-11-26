@@ -89,9 +89,6 @@ struct DictationPage: View {
             return ("Download a speech model to start", "\(name) suits most people: \(model?.languages ?? "") in \(LowtideFormat.bytes(model?.bytes ?? 0)).",
                     ("Download \(name)", { dictation.download(dictation.prefs.model) }))
         }
-        if let holder = status.blockedBy, !dictation.prefs.shortcut.modifiersOnly {
-            return ("\(holder) is blocking the shortcut", "macOS hides key presses while an app holds Secure Input.", nil)
-        }
         switch status.modelState {
         case .loading:
             return ("Getting \(name) ready", status.modelMessage.isEmpty ? "A few seconds; you can already speak." : status.modelMessage, nil)
@@ -106,8 +103,6 @@ struct DictationPage: View {
     // MARK: Settings
 
     @ViewBuilder private var settings: some View {
-        let status = dictation.status
-        if let holder = status.blockedBy { secureInputNotice(holder) }
         PrefsGroup {
             PrefsRow("Permissions", hint: micAllowed && tapAllowed
                      ? "Nothing you say leaves this Mac"
@@ -146,35 +141,28 @@ struct DictationPage: View {
         DictationStatsSection(confirm: $confirm)
     }
 
-    private func secureInputNotice(_ holder: String) -> some View {
-        let shortcut = dictation.prefs.shortcut
-        return PrefsNotice("\(holder) is holding Secure Input",
-                           message: shortcut.modifiersOnly
-                           ? "macOS hides key presses from shortcuts while it does, but \(dictation.prefs.shortcutLabel) is a modifier alone, so dictation still hears it."
-                           : "macOS hides key presses from every shortcut while it does, this one included. Clicking out of its password field usually ends it; quitting \(holder) always does. A modifier alone keeps working through it.") {
-            if !shortcut.modifiersOnly {
-                Button("Use Right ⌥ Instead") {
-                    dictation.prefs.shortcut = .rightOption
-                    dictation.prefs.shortcutLabel = VoiceShortcut.rightOptionLabel
-                }
-                .buttonStyle(.lowtide(.secondary, size: .small))
-            }
-        }
-    }
-
     private var shortcutGroup: some View {
         let recording = dictation.recordingShortcut
         // macOS acts on the Globe key too unless it's set to Do Nothing.
         let globeClash = dictation.prefs.shortcut.usesFn && dictation.status.shortcutAccess != nil && dictation.status.fnUsage != 0
+        let note = dictation.prefs.shortcut.note(label: dictation.prefs.shortcutLabel)
         return PrefsGroup("Shortcut") {
             PrefsRow("Shortcut", hint: recording
-                     ? "Press a key with ⌘, ⌥, ⌃ or fn, a function key, a modifier alone (like Right ⌥ or fn), or a mouse button. Esc cancels"
-                     : "Works in every app. Esc cancels while you speak") {
+                     ? "Press any key, with ⌘, ⌥, ⌃ or fn if you like, a function key, a modifier alone (like Right ⌥ or fn), or a mouse button. Esc cancels"
+                     : note.map { "\($0). Works in every app." } ?? "Works in every app. Esc cancels while you speak") {
                 if recording {
                     RecordingLabel()
                     Button("Cancel") { dictation.recordShortcut(false) }.buttonStyle(.lowtide(.quiet, size: .small))
                 } else {
-                    KeyCap(keys: dictation.prefs.shortcutLabel)
+                    HStack(spacing: Space.xs) {
+                        KeyCap(keys: dictation.prefs.shortcutLabel)
+                        if dictation.shortcutSaved {
+                            Label("Saved", systemImage: "checkmark")
+                                .labelStyle(TightLabelStyle())
+                                .font(.ui(.xxs, .medium))
+                                .foregroundStyle(palette.ok.color)
+                        }
+                    }
                     Button("Change") { dictation.recordShortcut(true) }
                         .buttonStyle(.lowtide(.secondary, size: .small))
                         .disabled(!dictation.status.running)

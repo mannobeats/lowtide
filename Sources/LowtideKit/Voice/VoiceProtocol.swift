@@ -24,6 +24,26 @@ public struct VoiceShortcut: Codable, Hashable, Sendable {
     /// presses from shortcut listeners then, not modifier changes.
     public var modifiersOnly: Bool { key == nil && button == nil }
     public var usesFn: Bool { modifiers.contains("fn") }
+
+    /// The F-row, which types nothing: a bare one is a fine shortcut. Kept in
+    /// step with `Keys.functionKeys` in the helper, which records the press.
+    static let functionKeys: Set<Int> = [
+        122, 120, 99, 118, 96, 97, 98, 100, 101, 109, 103, 111, 105, 107, 113, 106, 64, 79, 80, 90,
+    ]
+    /// Keys that only move: bare, they give up nothing typed. The F-row plus
+    /// the arrows, Home, End, the page keys, Forward Delete and Help. Kept in
+    /// step with `Keys.implicitFn` in the helper.
+    static let movingKeys: Set<Int> = functionKeys.union([123, 124, 125, 126, 115, 119, 116, 121, 117, 114])
+
+    /// A short line for a key that gives something up, else nil: one with
+    /// ⌘, ⌥ or ⌃, a mouse button, a modifier alone, or a key that only moves
+    /// gives nothing up. Shift and fn don't count: ⇧A still types A.
+    public func note(label: String) -> String? {
+        guard let key, button == nil, !Self.movingKeys.contains(key),
+              !modifiers.contains(where: ["command", "option", "control"].contains)
+        else { return nil }
+        return "\(label) no longer types"
+    }
 }
 
 /// Listen while the shortcut is held, until it's tapped again, or either.
@@ -336,7 +356,6 @@ public enum HelperMessage: Equatable, Sendable {
     case download(model: String, progress: Double, done: Bool, error: String?)
     /// `fnUsage` is .some(nil) when the helper says it's unset.
     case access(shortcut: Bool?, polish: Bool?, fnUsage: Int??)
-    case blocked(by: String?)
     case shortcut(VoiceShortcut, label: String)
     case devices([VoiceDevice])
 
@@ -369,9 +388,6 @@ public enum HelperMessage: Equatable, Sendable {
         case "access":
             let fn: Int?? = s.keys.contains("fnUsage") ? .some((s["fnUsage"] as? NSNumber)?.intValue) : .none
             return .access(shortcut: bool("shortcut"), polish: bool("polish"), fnUsage: fn)
-        case "blocked":
-            let by = str("by")
-            return .blocked(by: by.isEmpty ? nil : by)
         case "shortcut":
             guard let raw = s["shortcut"] as? [String: Any] else { return nil }
             let shortcut = VoiceShortcut(
